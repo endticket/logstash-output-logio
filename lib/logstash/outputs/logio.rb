@@ -31,7 +31,7 @@ require "socket"
 class LogStash::Outputs::LogIO < LogStash::Outputs::Base
 
   config_name "logio"
-  plugin_status "experimental"
+  default :codec, 'line'
 
   # log.io server host
   config :host, :validate => :string, :required => true
@@ -60,6 +60,7 @@ class LogStash::Outputs::LogIO < LogStash::Outputs::Base
     begin
       @sock = TCPSocket.open(@host, @port)
     rescue
+      @logger.error("LOGIO: Failed to connect to Log.io server, attempting to reconnect")
       sleep(2)
       connect
     end
@@ -70,6 +71,8 @@ class LogStash::Outputs::LogIO < LogStash::Outputs::Base
     begin
       @sock.puts msg
     rescue
+      @logger.error("LOGIO: Failed to send line to Log.io server, attempting to reconnect")
+
       sleep(2)
       connect
     end
